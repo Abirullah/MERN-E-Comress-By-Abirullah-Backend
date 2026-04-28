@@ -3,6 +3,75 @@ import User from "../models/User.js";
 import { createToken } from "../middlewares/JWT.js";
 
 
+
+// admain Account
+
+export const createAdminAccount = asyncHandler(async (req, res) => {
+  const { username, email, password , role} = req.body;
+
+  const IsThereAnAdmin = await User.findOne({ isAdmin: true });
+
+
+   if (!IsThereAnAdmin) {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await User.create({
+      name: username,
+      email: email,
+      password: hashedPassword,
+      role: role || "super-admin",
+    });
+
+    console.log("First admin created");
+  }
+}
+);
+
+  
+
+
+
+
+
+// admin actions
+
+
+const createAdminAccount = asyncHandler(async (req, res) => {
+  const { username, email, password } = req.body;
+
+
+  const existingAdmin = await User.findOne({ isAdmin: true });
+  if (existingAdmin) {
+    res.status(400);
+    throw new Error("Admin account already exists");
+  }
+
+  const adminUser = new User({
+    username,
+    email,
+    password,
+    isAdmin: true,
+  });
+
+  const createdAdmin = await adminUser.save();
+
+  res.status(201).json({
+    _id: createdAdmin._id,
+    username: createdAdmin.username,
+    email: createdAdmin.email,
+    isAdmin: createdAdmin.isAdmin,
+    token: createToken(createdAdmin._id),
+  });
+});
+
+
+
+
+
+
+
+
+
 const getAllUsers = asyncHandler(async (req, res) => {
   const users = await User.find({}).select("-password");
   res.json(users);

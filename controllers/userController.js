@@ -1,81 +1,76 @@
 import User from "../models/userModel.js";
 import asyncHandler from "../middlewares/asyncHandler.js";
-import bycrypt from "bcryptjs";
+import bcrypt from "bcryptjs";
 import createToken from "../utils/createToken.js";
 import { authCookieOptions } from "../utils/cookieOptions.js";
-import { response } from "express";
+import {
+  buildPublicUserResponse,
+  createUserApiError,
+  handleUserApiError,
+  normalizeLoginPayload,
+  normalizeProfileUpdatePayload,
+  normalizeRegisterPayload,
+} from "../HealpingMaterials/UserAPIsHerper.js";
 
 const createUser = asyncHandler(async (req, res) => {
-  const { username, email, password } = req.body;
-
-  if (!username || !email || !password) {
-    res.status(400).json({ message: "Please provide all required fields" });
-    return;
-  }
-
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    res.status(400).json({ message: "User already exists" });
-    return;
-  }
-
-  const salt = await bycrypt.genSalt(10);
-  const hashedPassword = await bycrypt.hash(password, salt);
-
-  const newUser = new User({ username, email, password: hashedPassword });
-
   try {
+    const { username, email, password, Profile } = normalizeRegisterPayload(
+      req.body
+    );
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+      res.status(400).json({ message: "User already exists" });
+      return;
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
+      ...(Profile ? { Profile } : {}),
+    });
+
     const createdUser = await newUser.save();
     createToken(res, createdUser._id);
- 
+
     return res.status(201).json({
-      _id: createdUser._id,
-      username: createdUser.username,
-      email: createdUser.email,
-      isAdmin: createdUser.isAdmin,
+      ...buildPublicUserResponse(createdUser),
     });
   } catch (error) {
-    res.status(400);
-    throw new Error(error.message || "Invalid user data");
+    handleUserApiError(res, error);
   }
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-
-  try{
-
+  try {
+    const { email, password } = normalizeLoginPayload(req.body);
     const existingUser = await User.findOne({ email });
 
-  if (existingUser) {
-    const isPasswordValid = await bycrypt.compare(
-      password,
-      existingUser.password
-    );
+    if (!existingUser) {
+      throw createUserApiError("Invalid email or password", 401);
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, existingUser.password);
 
     if (isPasswordValid) {
       createToken(res, existingUser._id);
 
-      res.status(200).json({
-        _id: existingUser._id,
-        username: existingUser.username,
-        email: existingUser.email,
-        isAdmin: existingUser.isAdmin,
-      });
+      res.status(200).json(buildPublicUserResponse(existingUser));
       return;
     }
+  } catch (error) {
+    handleUserApiError(res, error);
+    return;
   }
 
-  }
-  catch(err){
-    res.status(500).json({ message: "An error occurred during login" }); 
-
-  }
-
-  
+  res.status(401).json({ message: "Invalid email or password" });
 });
 
-const logoutCurrentUser = asyncHandler(async (req, res) => {
+const logoutUser = asyncHandler(async (req, res) => {
   res.cookie("jwt", "", {
     ...authCookieOptions,
     expires: new Date(0),
@@ -83,59 +78,70 @@ const logoutCurrentUser = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Logged out successfully" });
 });
 
-const getAllUsers = asyncHandler(async (req, res) => {
-  const users = await User.find({});
-  res.json(users);
-});
-
-const getUserProfile = asyncHandler(async (req, res) => {
+const getprofile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
   if (user) {
-    res.json({
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-    });
+    res.json(buildPublicUserResponse(user));
   } else {
     res.status(404);
     throw new Error("User not found");
   }
 });
 
-const updateUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
-  if (user) {
-    user.username = req.body.username || user.username;
-    user.email = req.body.email || user.email;
+const updateProfile = asyncHandler(async (req, res) => {
+  try {
+    const updates = normalizeProfileUpdatePayload(req.body);
+    const user = await User.findById(req.user._id);
 
-    if (req.body.password) {
-      const salt = await bycrypt.genSalt(10);
-      const hashedPassword = await bycrypt.hash(req.body.password, salt);
-      user.password = hashedPassword;
+    if (!user) {
+      res.status(404);
+      throw new Error("User not found");
+    }
+
+    if (updates.email && updates.email !== user.email) {
+      const existingUser = await User.findOne({
+        email: updates.email,
+        _id: { $ne: user._id },
+      });
+
+      if (existingUser) {
+        throw createUserApiError("Email is already in use");
+      }
+    }
+
+    if (updates.username !== undefined) {
+      user.username = updates.username;
+    }
+
+    if (updates.email !== undefined) {
+      user.email = updates.email;
+    }
+
+    if (updates.Profile) {
+      user.Profile = {
+        ...(user.Profile?.toObject?.() || user.Profile || {}),
+        ...updates.Profile,
+      };
+    }
+
+    if (updates.password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(updates.password, salt);
     }
 
     const updatedUser = await user.save();
 
-    res.json({
-      _id: updatedUser._id,
-      username: updatedUser.username,
-      email: updatedUser.email,
-      isAdmin: updatedUser.isAdmin,
-    });
-  } else {
-    res.status(404);
-    throw new Error("User not found");
+    res.json(buildPublicUserResponse(updatedUser));
+  } catch (error) {
+    handleUserApiError(res, error);
   }
 });
-
-
 
 export {
   createUser,
   loginUser,
-  logoutCurrentUser,
-  getAllUsers,
-  getUserProfile,
-  updateUserProfile,
+  logoutUser,
+  getprofile,
+  updateProfile,
 };
