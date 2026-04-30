@@ -10,14 +10,14 @@ import {
 import { authenticate, authorizeAdmin } from "../middlewares/authMiddleware.js";
 
 
-const router = express.Router();
+const UserRouter = express.Router();
  
-router.post("/register", createUser);  
-router.post("/login", loginUser);
-router.post("/logout", authenticate, logoutUser);
-router.get("/profile", authenticate, getprofile);
-router.put("/profile", authenticate, updateProfile);
+UserRouter.post("/register", createUser);  
+UserRouter.post("/login", loginUser);
+UserRouter.post("/logout", authenticate, logoutUser);
+UserRouter.get("/profile", authenticate, getprofile);
+UserRouter.put("/profile", authenticate, updateProfile);
 
 
   
-export default router; 
+export default UserRouter; 

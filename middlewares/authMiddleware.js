@@ -22,12 +22,24 @@ const authenticate = asyncHandler(async (req, res, next) => {
   }
 });
 
-const authorizeAdmin = (req, res, next) => {
-  if (req.user && req.user.isAdmin) {
-    next();
-  } else {
-    res.status(401).send("Not authorized as an admin.");
+const authorizeAdmin = (RequiredRole , req, res, next) => {
+
+  let token = req.cookies.jwt;
+
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+   if (!decoded) {
+    res.status(401);
+    throw new Error("Unauthorized, token failed");
+  } 
+
+  if (decoded.role !== "super-admin") {
+    res.status(403);
+    throw new Error("Forbidden: You don't have permission to access this resource");
   }
+
+    next();
+  
 };
 
 export { authenticate, authorizeAdmin }; 

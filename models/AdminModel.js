@@ -17,8 +17,16 @@ const roleSchema = new Schema({
   },
   permissions: [
     {
-      type: String,
+      type: String, 
+      enum: [ 
+        "manage-products",
+        "manage-users", 
+        "manage-delivery",
+        "*",
+      ],
+      required: true,
     },
+
   ],
 });
 

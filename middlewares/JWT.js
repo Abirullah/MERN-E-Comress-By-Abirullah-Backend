@@ -11,8 +11,12 @@ export const createToken = (res, userId) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge: JWT_LIFETIME ? parseInt(JWT_LIFETIME) * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000,
+    maxAge: process.env.JWT_LIFETIME
+      ? parseInt(process.env.JWT_LIFETIME) * 24 * 60 * 60 * 1000
+      : 7 * 24 * 60 * 60 * 1000,
   });
+
+  return token; 
 };
 
 export const verifyToken = asyncHandler(async (req, res, next) => {
