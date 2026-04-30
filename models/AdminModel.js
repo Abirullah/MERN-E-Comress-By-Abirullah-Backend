@@ -20,9 +20,9 @@ const roleSchema = new Schema({
       type: String, 
       enum: [ 
         "manage-products",
-        "manage-users", 
+        "manage-users",
         "manage-delivery",
-        "*",
+        "All",
       ],
       required: true,
     },

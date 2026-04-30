@@ -70,6 +70,11 @@ const ProductOrderdSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    accountSatus : {
+      type: Boolean,
+      enum: [true, false],
+      default: true
+    }
   },
   { _id: false }
 );

@@ -92,57 +92,107 @@ export const logout = asyncHandler(async (req, res) => {
 
 
 
-// admin actions
+//user account related admin actions
 
 
 export const getAllUsers = asyncHandler(async (req, res) => {
   const users = await User.find({}).select("-password");
-  res.json(users);
+  res.status(200).json(users);
 });
 
-const deleteUserById = asyncHandler(async (req, res) => {
-  const user = await Admin.findById(req.params.id);
+export const getUserById = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
   if (user) {
-    if (user.isAdmin) {
-      res.status(400);
-      throw new Error("Cannot delete admin user");
-    }
-
-    await user.deleteOne({ _id: user._id });
-    res.json({ message: "User deleted successfully" });
+    res.status(200).json(user);
   } else {
     res.status(404);
     throw new Error("User not found");
   }
 });
 
-const getUserById = asyncHandler(async (req, res) => {
-  const user = await Admin.findById(req.params.id);
+export const deactivateUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
   if (user) {
-    res.json(user);
+     const theRequiredUser =  await User.findOne({ _id: user._id });
+
+   theRequiredUser.accountSatus = false;
+
+   await theRequiredUser.save();
+    res.json({ message: "User deactiviated successfully" });
   } else {
     res.status(404);
     throw new Error("User not found");
   }
 });
 
-const updateUserById = asyncHandler(async (req, res) => {
-  const user = await Admin.findById(req.params.id);
+export const activateUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
   if (user) {
-    user.username = req.body.username || user.username;
-    user.email = req.body.email || user.email;
-    user.isAdmin = Boolean(req.body.isAdmin);
+     const theRequiredUser =  await User.findOne({ _id: user._id });
 
-    const updatedUser = await user.save();
+   theRequiredUser.accountSatus = true;
 
-    res.json({
-      _id: updatedUser._id,
-      username: updatedUser.username,
-      email: updatedUser.email,
-      isAdmin: updatedUser.isAdmin,
-    });
+   await theRequiredUser.save();
+    res.json({ message: "User activiated successfully" });
   } else {
     res.status(404);
     throw new Error("User not found");
   }
 });
+
+
+
+
+// product related admin actions
+
+
+export const createProduct = asyncHandler(async (req, res) => {
+  const { name, description, price, category, brand, countInStock, images, variants, tags } = req.body;
+  
+  const product = new Product({
+    name, 
+    description,
+    price,
+    category,
+    brand,
+    countInStock,
+    images,
+    variants,
+    tags
+  });
+  
+  const createdProduct = await product.save();
+  res.status(201).json(createdProduct);
+});
+
+export const updateProduct = asyncHandler(async (req, res) => {
+  const { name, description, price, category, brand, countInStock, images, variants, tags } = req.body;
+  
+  const product = await Product.findById(req.params.id);
+  
+  if (product) {
+    product.name = name || product.name;
+    product.description = description || product.description;
+    product.price = price || product.price;
+    product.category = category || product.category;
+    product.brand = brand || product.brand;
+    product.countInStock = countInStock || product.countInStock;
+    product.images = images || product.images;
+    product.variants = variants || product.variants;
+    product.tags = tags || product.tags;
+
+    const updatedProduct = await product.save();
+    res.json(updatedProduct);
+  } else {
+    res.status(404);
+    throw new Error("Product not found");
+  }
+});
+
+
+
+
+
+
+
+

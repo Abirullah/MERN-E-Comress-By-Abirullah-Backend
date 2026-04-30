@@ -1,11 +1,12 @@
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 import asyncHandler from "./asyncHandler.js";
+import { Admin } from "../models/AdminModel.js";
 
 const authenticate = asyncHandler(async (req, res, next) => {
   let token;
 
-  token = req.cookies.jwt;
+  token = req.cookies.Token;
 
   if (token) {
     try {
@@ -22,24 +23,39 @@ const authenticate = asyncHandler(async (req, res, next) => {
   }
 });
 
-const authorizeAdmin = (RequiredRole , req, res, next) => {
+const authorizeAdmin =  (RequiredRole) => {
 
-  let token = req.cookies.jwt;
+  return  async (req, res, next) => {
+
+
+  let token = req.cookies.Token;
 
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
    if (!decoded) {
-    res.status(401);
-    throw new Error("Unauthorized, token failed");
+    res.status(403).json({ error: "Unauthorized, token failed .." });
   } 
 
-  if (decoded.role !== "super-admin") {
-    res.status(403);
-    throw new Error("Forbidden: You don't have permission to access this resource");
-  }
+ 
 
+  const AdminData = await Admin.findById(decoded.userId);
+
+  const AdminRole = AdminData.role.permissions[0]
+
+
+   if (!AdminRole) { 
+    res.status(403).json({ error: "Forbidden: You don't have permission to access this resource" });
+  } 
+
+
+ 
+  if (AdminRole !== "All" && AdminRole !== RequiredRole) {
+    res.status(403).json({ error: "Forbidden: You don't have permission to access this resource..." });
+  }
+ 
     next();
   
+};
 };
 
 export { authenticate, authorizeAdmin }; 
