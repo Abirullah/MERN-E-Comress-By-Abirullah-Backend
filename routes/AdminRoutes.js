@@ -1,6 +1,6 @@
 import express from "express";
 import { createAdminAccount, login , logout } from "../controllers/AdmainContreller.js";
-import { getAllUsers , deactivateUser , activateUser , getUserById } from "../controllers/AdmainContreller.js";
+import { getAllUsers , deactivateUser , activateUser , getUserById , createProduct } from "../controllers/AdmainContreller.js";
 
 
 import { authenticate, authorizeAdmin } from "../middlewares/authMiddleware.js";
@@ -24,6 +24,8 @@ AdminRouter.put("/users/:id/deactivate" , authenticate, authorizeAdmin("manage-u
 
 
 // product related Admin action routes
+
+AdminRouter.post("/products" , authenticate, authorizeAdmin("manage-products") , createProduct);
 
 export default AdminRouter;
 

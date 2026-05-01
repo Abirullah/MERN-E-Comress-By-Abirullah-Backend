@@ -1,8 +1,10 @@
 import asyncHandler from "express-async-handler";
 import {Admin} from '../models/AdminModel.js'
 import User from "../models/userModel.js";
+import Product from "../models/ProductModel.js";
 import { createToken } from "../middlewares/JWT.js";
 import bcrypt from "bcryptjs/dist/bcrypt.js";
+import ExtractProductDetailsFromRequest from "../HealpingMaterials/AdminHelper.js";
 
 
 
@@ -147,22 +149,11 @@ export const activateUser = asyncHandler(async (req, res) => {
 
 
 export const createProduct = asyncHandler(async (req, res) => {
-  const { name, description, price, category, brand, countInStock, images, variants, tags } = req.body;
-  
-  const product = new Product({
-    name, 
-    description,
-    price,
-    category,
-    brand,
-    countInStock,
-    images,
-    variants,
-    tags
-  });
-  
-  const createdProduct = await product.save();
-  res.status(201).json(createdProduct);
+  const productData = ExtractProductDetailsFromRequest(req);
+
+  const product = await Product.create(productData);
+
+  res.status(201).json(product);
 });
 
 export const updateProduct = asyncHandler(async (req, res) => {

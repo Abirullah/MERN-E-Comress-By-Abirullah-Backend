@@ -15,7 +15,7 @@ const authenticate = asyncHandler(async (req, res, next) => {
       next();
     } catch (error) {
       res.status(401);
-      throw new Error("Unauthorized, token failed");
+      throw new Error("Unauthorized, token failed"); 
     }
   } else {
     res.status(401);
