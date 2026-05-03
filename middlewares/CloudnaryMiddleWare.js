@@ -1,6 +1,6 @@
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
-import cloudinary from "../config/cloudinary.js";
+import cloudinary from "../config/Cloudnary.js";
 
 
 const storage = new CloudinaryStorage({
@@ -19,9 +19,9 @@ const upload = multer({
     if (!file.mimetype.startsWith("image/")) {
       return cb(new Error("Only image files are allowed"));
     }
-    cb(null, true);
+    cb(null, true); 
   },
-});
+});  
 
 
 export const uploadProductImages = upload.array("images", 12);

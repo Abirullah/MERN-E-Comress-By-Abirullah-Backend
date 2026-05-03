@@ -179,7 +179,7 @@ export const updateProduct = asyncHandler(async (req, res) => {
     throw new Error("Product not found");
   }
 });
-
+ 
 
 
 

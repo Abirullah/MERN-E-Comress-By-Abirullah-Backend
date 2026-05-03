@@ -1,10 +1,11 @@
 import express from "express";
 import { createAdminAccount, login , logout } from "../controllers/AdmainContreller.js";
-import { getAllUsers , deactivateUser , activateUser , getUserById , createProduct } from "../controllers/AdmainContreller.js";
+import { getAllUsers , deactivateUser , activateUser , getUserById , createProduct , updateProduct } from "../controllers/AdmainContreller.js";
 
 
 import { authenticate, authorizeAdmin } from "../middlewares/authMiddleware.js";
 import { IsThereAnyAdmin } from "../middlewares/AdminPermission.js";
+import { uploadProductImages } from "../middlewares/CloudnaryMiddleWare.js";
 
 const AdminRouter = express.Router();
 
@@ -25,9 +26,9 @@ AdminRouter.put("/users/:id/deactivate" , authenticate, authorizeAdmin("manage-u
 
 // product related Admin action routes
 
-AdminRouter.post("/products" , authenticate, authorizeAdmin("manage-products") , createProduct);
+AdminRouter.post("/products" , authenticate, authorizeAdmin("manage-products") , uploadProductImages, createProduct);
+AdminRouter.put("/products/:id" , authenticate, authorizeAdmin("manage-products") , uploadProductImages, updateProduct);
 
 export default AdminRouter;
-
 
 
