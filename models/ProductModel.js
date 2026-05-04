@@ -118,6 +118,16 @@ const productSchema = new mongoose.Schema(
       enum: ["men", "women", "unisex"],
       default: "unisex",
     },
+    status: {
+      type: String,
+      enum: ["new Arrival", "best seller", "limited edition" , "normal" , "sale"],
+      default: "new Arrival",
+    },
+
+    off : {
+      type: Number,
+      default: 0,
+    },
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

@@ -1,6 +1,18 @@
 import express from "express";
 import { createAdminAccount, login , logout } from "../controllers/AdmainContreller.js";
-import { getAllUsers , deactivateUser , activateUser , getUserById , createProduct , updateProduct } from "../controllers/AdmainContreller.js";
+import { 
+    getAllUsers ,
+    deactivateUser ,
+    activateUser ,
+    getUserById 
+} from "../controllers/AdmainContreller.js";
+
+import {
+    createProduct,
+    updateProduct,
+    deleteProduct
+
+} from "../controllers/ProductController.js"
 
 
 import { authenticate, authorizeAdmin } from "../middlewares/authMiddleware.js";
@@ -28,7 +40,7 @@ AdminRouter.put("/users/:id/deactivate" , authenticate, authorizeAdmin("manage-u
 
 AdminRouter.post("/products" , authenticate, authorizeAdmin("manage-products") , uploadProductImages, createProduct);
 AdminRouter.put("/products/:id" , authenticate, authorizeAdmin("manage-products") , uploadProductImages, updateProduct);
-
+AdminRouter.delete("/products/:id" , authenticate, authorizeAdmin("manage-products") , deleteProduct);
 export default AdminRouter;
 
 
