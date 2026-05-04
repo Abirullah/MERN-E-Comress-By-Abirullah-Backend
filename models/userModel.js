@@ -92,7 +92,7 @@ const userSchema = new mongoose.Schema(
     },
 
     Profile : UserProfileSchema,
-    WishingList: UserWishingListSchema,
+    Wishlist: UserWishingListSchema,
     OrderedProducts: ProductOrderdSchema,
 
     email: {

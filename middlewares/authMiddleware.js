@@ -11,7 +11,11 @@ const authenticate = asyncHandler(async (req, res, next) => {
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      if(!decoded) {
+        res.status(401).json({ error: "Unauthorized, token failed" });
+      }
       req.user = await User.findById(decoded.userId).select("-password");
+
       next();
     } catch (error) {
       res.status(401);
