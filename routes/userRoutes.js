@@ -11,7 +11,9 @@ import {
   getProducts ,
   getProductById,
   AddToWishlist,
-  ProductReview
+  ProductReview,
+  getwishlist,
+  removeFromWishlist
 } from "../controllers/ProductController.js";
 
 import { authenticate, authorizeAdmin } from "../middlewares/authMiddleware.js";
@@ -30,10 +32,13 @@ UserRouter.put("/profile", authenticate, updateProfile);
 
 
 // user action related to products
-UserRouter.get("/products",authenticate, getProducts);
-UserRouter.get("/products/:id", authenticate, getProductById);
+UserRouter.get("/products", getProducts);
+UserRouter.get("/products/:id", getProductById);
 UserRouter.post("/products/:id/wishlist", authenticate, AddToWishlist); 
 UserRouter.post("/products/:id/reviews", authenticate, ProductReview); 
+UserRouter.get("/wishlist" , authenticate , getwishlist);
+
+
 
 
   

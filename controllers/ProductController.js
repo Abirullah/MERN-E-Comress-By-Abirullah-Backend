@@ -126,9 +126,34 @@ const ProductReview = asyncHandler(async (req, res) => {
   }
 });
 
+const getwishlist = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).populate("Wishlist.items");
 
-export { getProducts, getProductById, AddToWishlist, ProductReview };
+  if (user && user.Wishlist) {
+    res.json(user.Wishlist.items);
+  } else {
+    res.status(404);
+    throw new Error("Wishlist not found");
+  }
+});
+
+const removeFromWishlist = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  const productId = req.params.id;
+
+  if (user && user.Wishlist) {
+    user.Wishlist.items.pull(productId);
+    await user.save();
+    res.json({ message: "Product removed from wishlist" });
+  } else {
+    res.status(404);
+    throw new Error("Wishlist not found");
+  }
+});
 
 
 
+
+export { getProducts, getProductById, AddToWishlist, ProductReview, getwishlist, removeFromWishlist };
 
