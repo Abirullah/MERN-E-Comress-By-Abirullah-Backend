@@ -58,6 +58,11 @@ const ProductOrderdSchema = new mongoose.Schema(
         ref: "Product",
       },
     ],
+    quantity: {
+      type: Number,
+      required: true,
+      default: 1,
+    },
     orderDate: {
       type: Date,
       default: Date.now,

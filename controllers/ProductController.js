@@ -2,7 +2,7 @@ import Product from "../models/ProductModel.js"
 import asyncHandler from 'express-async-handler';
 import User from "../models/userModel.js";
 import { response } from "express";
-
+import ExtractProductDetailsFromRequest from "../HealpingMaterials/AdminHelper.js";
 
 
 
@@ -73,8 +73,7 @@ const getProductById = asyncHandler(async (req, res) => {
   }
 });
 
-const AddToWishlist = asyncHandler(async (req, res) => {
-
+const ToggleToWishlist = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
   const productId = req.params.id;
 
@@ -130,30 +129,34 @@ const getwishlist = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).populate("Wishlist.items");
 
   if (user && user.Wishlist) {
-    res.json(user.Wishlist.items);
+    const wishlistProducts = user.Wishlist.items;
+    const AllProducts = await Promise.all(
+      wishlistProducts.map((product) => Product.findById(product._id))
+    );
+    res.json(AllProducts);
   } else {
     res.status(404);
     throw new Error("Wishlist not found");
   }
 });
 
-const removeFromWishlist = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
 
+const PlaceOrder = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
   const productId = req.params.id;
 
-  if (user && user.Wishlist) {
-    user.Wishlist.items.pull(productId);
-    await user.save();
-    res.json({ message: "Product removed from wishlist" });
-  } else {
-    res.status(404);
-    throw new Error("Wishlist not found");
+  if (!user.Orderd) {
+    user.Orderd = { items: [] };
   }
+
+  user.Orderd.items.push(productId);
+  await user.save();
+  res.json({ message: "Order placed successfully" });
 });
 
 
 
 
-export { getProducts, getProductById, AddToWishlist, ProductReview, getwishlist, removeFromWishlist };
+
+export { getProducts, getProductById, ToggleToWishlist, ProductReview, getwishlist, PlaceOrder };
 
