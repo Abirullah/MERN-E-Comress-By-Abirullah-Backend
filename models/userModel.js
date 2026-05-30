@@ -50,40 +50,48 @@ const UserWishingListSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const ProductOrderdSchema = new mongoose.Schema(
+const ProductOrderedSchema = new mongoose.Schema(
   {
-    items: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
-      },
-    ],
+    stripeSessionId: {
+      type: String,
+      default: null,
+    },
+
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+
     quantity: {
       type: Number,
       required: true,
       default: 1,
     },
-    orderDate: {
-      type: Date,
-      default: Date.now,
-    },
+
     totalAmount: {
       type: Number,
       required: true,
     },
-    IsRecieved : {
+
+    orderDate: {
+      type: Date,
+      default: Date.now,
+    },
+
+    isReceived: {
       type: Boolean,
       default: false,
     },
-    accountSatus : {
-      type: Boolean,
-      enum: [true, false],
-      default: true
-    }
+
+    orderStatus: {
+      type: String,
+      enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
+      default: "Pending",
+    },
   },
   { _id: false }
 );
-
 
 
 const userSchema = new mongoose.Schema(
@@ -98,7 +106,10 @@ const userSchema = new mongoose.Schema(
 
     Profile : UserProfileSchema,
     Wishlist: UserWishingListSchema,
-    OrderedProducts: ProductOrderdSchema,
+    OrderedProducts: {
+      type: [ProductOrderedSchema],
+      default: [],
+    },
 
     email: {
       type: String,

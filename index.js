@@ -9,7 +9,7 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import AdminRouter from "./routes/AdminRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
-// import categoryRoutes from "./routes/categoryRoutes.js";
+import { StripeWebhook } from "./controllers/CheackOutController.js";
 
 const port = process.env.PORT || 5000;
 
@@ -28,6 +28,13 @@ app.use(
     credentials: true,
   })
 );
+
+app.post(
+  "/api/users/stripe/webhook",
+  express.raw({ type: "application/json" }),
+  StripeWebhook
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

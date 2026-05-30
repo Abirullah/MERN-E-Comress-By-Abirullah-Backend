@@ -7,18 +7,21 @@ import {
   updateProfile
 } from "../controllers/userController.js";
 
-import { 
+import {
   getProducts ,
   getProductById,
   ToggleToWishlist,
   ProductReview,
   getwishlist,
-  PlaceOrder
+  PlaceOrder,
+  UserOrders,
+  getOrderById,
+  OrderRecieved
 } from "../controllers/ProductController.js";
 
-import { authenticate, authorizeAdmin } from "../middlewares/authMiddleware.js";
+import { authenticate } from "../middlewares/authMiddleware.js";
+import { CreateCheckOut } from "../controllers/CheackOutController.js";
 import User from "../models/userModel.js";
-import CheackOut from "../controllers/CheckOutController.js";
 
 
 const UserRouter = express.Router();
@@ -38,7 +41,11 @@ UserRouter.get("/products/:id", getProductById);
 UserRouter.post("/products/:id/wishlist", authenticate, ToggleToWishlist); 
 UserRouter.post("/products/:id/reviews", authenticate, ProductReview); 
 UserRouter.get("/:id/wishlist" , authenticate , getwishlist);
-UserRouter.post("/products/:id/order", authenticate, CreateCheckOut, PlaceOrder);
+UserRouter.post("/products/:id/checkout", authenticate, CreateCheckOut);
+UserRouter.get("/orders/", authenticate, UserOrders);
+UserRouter.get("/orders/:id", authenticate, getOrderById);
+UserRouter.post("/orders/:id/received", authenticate , OrderRecieved);
+
 
 
 

@@ -140,23 +140,64 @@ const getwishlist = asyncHandler(async (req, res) => {
   }
 });
 
+const UserOrders = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).populate("orders.product");
 
-const PlaceOrder = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
-  const productId = req.params.id;
-
-  if (!user.Orderd) {
-    user.Orderd = { items: [] };
+  if (user && user.orders) {
+    res.json(user.orders);
+  } else {
+    res.status(404);
+    throw new Error("Orders not found");
   }
+});
 
-  user.Orderd.items.push(productId);
-  await user.save();
-  res.json({ message: "Order placed successfully" });
+const getOrderById = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).populate("orders.product");
+
+  if (user && user.orders) {
+    const order = user.orders.find(
+      (o) => o._id.toString() === req.params.id.toString()
+    );
+
+    if (order) {
+      res.json(order);
+    } else {
+      res.status(404);
+      throw new Error("Order not found");
+    }
+  } else {
+    res.status(404);
+    throw new Error("Orders not found");
+  }
+});
+
+const OrderRecieved = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  const orderId = req.params.id;
+
+  if (user && user.orders) {
+    const order = user.orders.find(
+      (o) => o._id.toString() === orderId.toString()
+    );
+
+    if (order) {
+      order.isReceived = true;
+      order.orderStatus = "Completed";
+      await user.save();
+      res.json({ message: "Order marked as received" });
+    } else {
+      res.status(404);
+      throw new Error("Order not found");
+    }
+  } else {
+    res.status(404);
+    throw new Error("Orders not found");
+  }
 });
 
 
 
 
 
-export { getProducts, getProductById, ToggleToWishlist, ProductReview, getwishlist, PlaceOrder };
+export { getProducts, getProductById, ToggleToWishlist, ProductReview, getwishlist, PlaceOrder , UserOrders, getOrderById, OrderRecieved};
 
