@@ -199,5 +199,13 @@ const OrderRecieved = asyncHandler(async (req, res) => {
 
 
 
-export { getProducts, getProductById, ToggleToWishlist, ProductReview, getwishlist, PlaceOrder , UserOrders, getOrderById, OrderRecieved};
+export {  getProducts, 
+          getProductById, 
+          ToggleToWishlist, 
+          ProductReview, 
+          getwishlist,  
+          UserOrders, 
+          getOrderById, 
+          OrderRecieved
+};
 

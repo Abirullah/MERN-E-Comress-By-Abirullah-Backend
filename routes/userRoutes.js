@@ -13,7 +13,6 @@ import {
   ToggleToWishlist,
   ProductReview,
   getwishlist,
-  PlaceOrder,
   UserOrders,
   getOrderById,
   OrderRecieved
