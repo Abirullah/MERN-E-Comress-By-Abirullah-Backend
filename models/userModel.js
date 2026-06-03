@@ -93,6 +93,37 @@ const ProductOrderedSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const userCreditCardSchema = new mongoose.Schema(
+  {
+    nameOnCard: {
+      firstName: {
+        type: String,
+        required: true,
+      },
+      lastName: {
+        type: String,
+        required: true,
+      },
+    },
+
+    cardNumber: {
+      type: String,
+      required: true,
+    },
+
+    expirationDate: {
+      type: String,
+      required: true,
+    },
+
+    cvv: {
+      type: String,
+      required: true,
+    },
+  },
+  { _id: false }
+);
+
 
 const userSchema = new mongoose.Schema(
   {
@@ -110,6 +141,12 @@ const userSchema = new mongoose.Schema(
       type: [ProductOrderedSchema],
       default: [],
     },
+    CreditCardInfo: {
+      type: userCreditCardSchema,
+      default: null,
+
+    },
+
 
     email: {
       type: String,
