@@ -48,6 +48,17 @@ const buildStripeProductData = (product) => {
   return productData;
 };
 
+const getCheckoutUnitPrice = (product) => {
+  const basePrice = Number(product.price || 0);
+  const discountPrice = Number(product.discountPrice || 0);
+
+  if (discountPrice > 0 && discountPrice < basePrice) {
+    return discountPrice;
+  }
+
+  return basePrice;
+};
+
 const CreateCheckOut = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
 
@@ -73,12 +84,12 @@ const CreateCheckOut = asyncHandler(async (req, res) => {
         price_data: {
           currency: "usd",
           product_data: buildStripeProductData(product),
-          unit_amount: Math.round(Number(product.price) * 100),
+          unit_amount: Math.round(getCheckoutUnitPrice(product) * 100),
         },
         quantity,
       },
     ],
-    success_url: `${getClientUrl()}/success`,
+    success_url: `${getClientUrl()}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${getClientUrl()}/cancel`,
     metadata: {
       userId: req.user._id.toString(),
@@ -156,7 +167,7 @@ const StripeWebhook = asyncHandler(async (req, res) => {
     user.OrderedProducts.push({
       product: product._id,
       quantity: orderQuantity,
-      totalAmount: product.price * orderQuantity,
+      totalAmount: getCheckoutUnitPrice(product) * orderQuantity,
       orderDate: new Date(),
       isReceived: false,
       orderStatus: "Pending",
