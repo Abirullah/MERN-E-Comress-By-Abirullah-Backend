@@ -143,8 +143,8 @@ const getwishlist = asyncHandler(async (req, res) => {
 const UserOrders = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).populate("orders.product");
 
-  if (user && user.orders) {
-    res.json(user.orders);
+  if (user && user.OrderedProducts) {
+    res.json(user.OrderedProducts);
   } else {
     res.status(404);
     throw new Error("Orders not found");
