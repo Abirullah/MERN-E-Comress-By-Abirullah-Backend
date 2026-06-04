@@ -141,7 +141,7 @@ const getwishlist = asyncHandler(async (req, res) => {
 });
 
 const UserOrders = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).populate("orders.product");
+  const user = await User.findById(req.user._id).populate("orders.OrderedProducts");
 
   if (user && user.OrderedProducts) {
     res.json(user.OrderedProducts);
@@ -152,10 +152,10 @@ const UserOrders = asyncHandler(async (req, res) => {
 });
 
 const getOrderById = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).populate("orders.product");
+  const user = await User.findById(req.user._id).populate("orders.OrderedProducts");
 
-  if (user && user.orders) {
-    const order = user.orders.find(
+  if (user && user.OrderedProducts) {
+    const order = user.OrderedProducts.find(
       (o) => o._id.toString() === req.params.id.toString()
     );
 
@@ -175,8 +175,8 @@ const OrderRecieved = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
   const orderId = req.params.id;
 
-  if (user && user.orders) {
-    const order = user.orders.find(
+  if (user && user.OrderedProducts) {
+    const order = user.OrderedProducts.find(
       (o) => o._id.toString() === orderId.toString()
     );
 
