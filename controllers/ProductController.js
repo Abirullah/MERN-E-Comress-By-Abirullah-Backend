@@ -141,7 +141,7 @@ const getwishlist = asyncHandler(async (req, res) => {
 });
 
 const UserOrders = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).populate("orders.OrderedProducts");
+  const user = await User.findById(req.user._id).populate("OrderedProducts");
 
   if (user && user.OrderedProducts) {
     res.json(user.OrderedProducts);
@@ -152,7 +152,7 @@ const UserOrders = asyncHandler(async (req, res) => {
 });
 
 const getOrderById = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).populate("orders.OrderedProducts");
+  const user = await User.findById(req.user._id).populate("OrderedProducts");
 
   if (user && user.OrderedProducts) {
     const order = user.OrderedProducts.find(
