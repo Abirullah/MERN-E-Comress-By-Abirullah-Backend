@@ -16,10 +16,16 @@ const port = process.env.PORT || 5000;
 connectDB();
 
 const app = express();
-const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
+const allowedOrigins = [
+  ...(process.env.CLIENT_URL || "http://localhost:5173")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+  ...(process.env.ADMIN_URL || "http://localhost:5174")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+].filter((origin, index, self) => self.indexOf(origin) === index);
 
 // Middlewares
 app.use(
@@ -35,8 +41,8 @@ app.post(
   StripeWebhook
 );
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
 

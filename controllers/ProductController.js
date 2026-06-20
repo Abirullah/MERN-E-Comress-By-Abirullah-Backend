@@ -18,20 +18,42 @@ export const createProduct = asyncHandler(async (req, res) => {
 });
 
 export const updateProduct = asyncHandler(async (req, res) => {
-  const { name, description, price, category, brand, countInStock, images, variants, tags } = req.body;
-  
   const product = await Product.findById(req.params.id);
   
   if (product) {
-    product.name = name || product.name;
-    product.description = description || product.description;
-    product.price = price || product.price;
-    product.category = category || product.category;
-    product.brand = brand || product.brand;
-    product.countInStock = countInStock || product.countInStock;
-    product.images = images || product.images;
-    product.variants = variants || product.variants;
-    product.tags = tags || product.tags;
+    const productData = ExtractProductDetailsFromRequest(req);
+
+    product.name =
+      productData.name !== undefined ? productData.name : product.name;
+    product.description =
+      productData.description !== undefined
+        ? productData.description
+        : product.description;
+    product.price =
+      productData.price !== undefined ? productData.price : product.price;
+    product.discountPrice =
+      productData.discountPrice !== undefined
+        ? productData.discountPrice
+        : product.discountPrice;
+    product.category =
+      productData.category !== undefined ? productData.category : product.category;
+    product.brand =
+      productData.brand !== undefined ? productData.brand : product.brand;
+    product.countInStock =
+      productData.countInStock !== undefined
+        ? productData.countInStock
+        : product.countInStock;
+    product.images =
+      productData.images?.length ? productData.images : product.images;
+    product.variants =
+      productData.variants?.length ? productData.variants : product.variants;
+    product.tags = productData.tags?.length ? productData.tags : product.tags;
+    product.gender =
+      productData.gender !== undefined ? productData.gender : product.gender;
+    product.isFeatured =
+      productData.isFeatured !== undefined ? productData.isFeatured : product.isFeatured;
+    product.isActive =
+      productData.isActive !== undefined ? productData.isActive : product.isActive;
 
     const updatedProduct = await product.save();
     res.json(updatedProduct);
@@ -141,33 +163,43 @@ const getwishlist = asyncHandler(async (req, res) => {
 });
 
 const UserOrders = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).populate("orders.product");
+  const user = await User.findById(req.user._id).populate("OrderedProducts.product");
 
-  if (user && user.orders) {
-    res.json(user.orders);
-  } else {
+  if (!user) {
     res.status(404);
     throw new Error("Orders not found");
   }
+
+  const orders = Array.isArray(user.OrderedProducts) ? [...user.OrderedProducts] : [];
+  orders.sort((left, right) => {
+    const leftDate = new Date(left.orderDate || left.createdAt || 0).getTime();
+    const rightDate = new Date(right.orderDate || right.createdAt || 0).getTime();
+
+    return rightDate - leftDate;
+  });
+
+  res.json(orders);
 });
 
 const getOrderById = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).populate("orders.product");
+  const user = await User.findById(req.user._id).populate("OrderedProducts.product");
 
-  if (user && user.orders) {
-    const order = user.orders.find(
-      (o) => o._id.toString() === req.params.id.toString()
-    );
-
-    if (order) {
-      res.json(order);
-    } else {
-      res.status(404);
-      throw new Error("Order not found");
-    }
-  } else {
+  if (!user) {
     res.status(404);
     throw new Error("Orders not found");
+  }
+
+  const order = (user.OrderedProducts || []).find(
+    (entry) =>
+      entry._id?.toString() === req.params.id.toString() ||
+      entry.stripeSessionId === req.params.id.toString()
+  );
+
+  if (order) {
+    res.json(order);
+  } else {
+    res.status(404);
+    throw new Error("Order not found");
   }
 });
 
@@ -175,23 +207,26 @@ const OrderRecieved = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
   const orderId = req.params.id;
 
-  if (user && user.orders) {
-    const order = user.orders.find(
-      (o) => o._id.toString() === orderId.toString()
-    );
-
-    if (order) {
-      order.isReceived = true;
-      order.orderStatus = "Completed";
-      await user.save();
-      res.json({ message: "Order marked as received" });
-    } else {
-      res.status(404);
-      throw new Error("Order not found");
-    }
-  } else {
+  if (!user) {
     res.status(404);
     throw new Error("Orders not found");
+  }
+
+  const order =
+    user.OrderedProducts?.id(orderId) ||
+    (user.OrderedProducts || []).find(
+      (entry) => entry.stripeSessionId === orderId.toString()
+    );
+
+  if (order) {
+    order.isReceived = true;
+    order.orderStatus = "Delivered";
+    order.paymentStatus = "Paid";
+    await user.save();
+    res.json({ message: "Order marked as received" });
+  } else {
+    res.status(404);
+    throw new Error("Order not found");
   }
 });
 
@@ -208,4 +243,3 @@ export {  getProducts,
           getOrderById, 
           OrderRecieved
 };
-

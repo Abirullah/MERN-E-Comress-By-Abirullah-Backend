@@ -57,6 +57,31 @@ const ProductOrderedSchema = new mongoose.Schema(
       default: null,
     },
 
+    productName: {
+      type: String,
+      default: "",
+    },
+
+    productBrand: {
+      type: String,
+      default: "",
+    },
+
+    brand: {
+      type: String,
+      default: "",
+    },
+
+    productImage: {
+      type: String,
+      default: "",
+    },
+
+    image: {
+      type: String,
+      default: "",
+    },
+
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
@@ -74,6 +99,48 @@ const ProductOrderedSchema = new mongoose.Schema(
       required: true,
     },
 
+    paymentMethod: {
+      type: String,
+      enum: ["bankTransfer", "cod", "creditCard"],
+      default: "bankTransfer",
+    },
+
+    paymentStatus: {
+      type: String,
+      enum: ["Pending", "Submitted", "Paid", "Failed", "Refunded"],
+      default: "Pending",
+    },
+
+    shippingAddress: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+
+    paymentDetails: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+
+    paymentSlipData: {
+      type: String,
+      default: null,
+    },
+
+    paymentSlipName: {
+      type: String,
+      default: null,
+    },
+
+    paymentSlipMimeType: {
+      type: String,
+      default: null,
+    },
+
+    selectedVariant: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+
     orderDate: {
       type: Date,
       default: Date.now,
@@ -89,8 +156,23 @@ const ProductOrderedSchema = new mongoose.Schema(
       enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
       default: "Pending",
     },
+
+    adminMessage: {
+      type: String,
+      default: "",
+    },
+
+    trackingNumber: {
+      type: String,
+      default: "",
+    },
+
+    courierName: {
+      type: String,
+      default: "",
+    },
   },
-  { _id: false }
+  { timestamps: true }
 );
 
 const userCreditCardSchema = new mongoose.Schema(
@@ -159,6 +241,11 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+    },
+
+    accountStatus: {
+      type: Boolean,
+      default: true,
     },
 
     isAdmin: {

@@ -15,32 +15,39 @@ import {
 } from "../controllers/ProductController.js"
 
 
-import { authenticate, authorizeAdmin } from "../middlewares/authMiddleware.js";
+import { authenticateAdmin, authorizeAdmin } from "../middlewares/authMiddleware.js";
 import { IsThereAnyAdmin } from "../middlewares/AdminPermission.js";
 import { uploadProductImages } from "../middlewares/CloudnaryMiddleWare.js";
+import {
+    getAdminDashboard,
+    getAdminOrders,
+    updateAdminOrder,
+} from "../controllers/AdminOrderController.js";
 
 const AdminRouter = express.Router();
 
 //admin account routes
-AdminRouter.post("/create-admin", IsThereAnyAdmin, authenticate ,authorizeAdmin,  createAdminAccount);
+AdminRouter.post("/create-admin", IsThereAnyAdmin, authenticateAdmin, authorizeAdmin("All"),  createAdminAccount);
 AdminRouter.post('/login', login);
-AdminRouter.post('/logout', authenticate, logout);
+AdminRouter.post('/logout', authenticateAdmin, logout);
 
 
 
 // user Account related Admin action routes
 
-AdminRouter.get("/users" , authenticate, authorizeAdmin("manage-users") , getAllUsers);
-AdminRouter.get("/users/:id" , authenticate, authorizeAdmin("manage-users") , getUserById);
-AdminRouter.put("/users/:id/activate" , authenticate, authorizeAdmin("manage-users") , activateUser);
-AdminRouter.put("/users/:id/deactivate" , authenticate, authorizeAdmin("manage-users") , deactivateUser);
+AdminRouter.get("/dashboard" , authenticateAdmin, getAdminDashboard);
+AdminRouter.get("/orders" , authenticateAdmin, authorizeAdmin("manage-delivery") , getAdminOrders);
+AdminRouter.patch("/orders/:userId/:orderId" , authenticateAdmin, authorizeAdmin("manage-delivery") , updateAdminOrder);
+
+AdminRouter.get("/users" , authenticateAdmin, authorizeAdmin("manage-users") , getAllUsers);
+AdminRouter.get("/users/:id" , authenticateAdmin, authorizeAdmin("manage-users") , getUserById);
+AdminRouter.put("/users/:id/activate" , authenticateAdmin, authorizeAdmin("manage-users") , activateUser);
+AdminRouter.put("/users/:id/deactivate" , authenticateAdmin, authorizeAdmin("manage-users") , deactivateUser);
 
 
 // product related Admin action routes
 
-AdminRouter.post("/products" , authenticate, authorizeAdmin("manage-products") , uploadProductImages, createProduct);
-AdminRouter.put("/products/:id" , authenticate, authorizeAdmin("manage-products") , uploadProductImages, updateProduct);
-AdminRouter.delete("/products/:id" , authenticate, authorizeAdmin("manage-products") , deleteProduct);
+AdminRouter.post("/products" , authenticateAdmin, authorizeAdmin("manage-products") , uploadProductImages, createProduct);
+AdminRouter.put("/products/:id" , authenticateAdmin, authorizeAdmin("manage-products") , uploadProductImages, updateProduct);
+AdminRouter.delete("/products/:id" , authenticateAdmin, authorizeAdmin("manage-products") , deleteProduct);
 export default AdminRouter;
-
-

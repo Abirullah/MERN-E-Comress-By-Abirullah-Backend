@@ -54,6 +54,10 @@ const loginUser = asyncHandler(async (req, res) => {
       throw createUserApiError("Invalid email or password", 401);
     }
 
+    if (existingUser.accountStatus === false) {
+      throw createUserApiError("Your account has been deactivated", 403);
+    }
+
     const isPasswordValid = await bcrypt.compare(password, existingUser.password);
 
     if (isPasswordValid) {
@@ -71,6 +75,10 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
+  res.cookie("Token", "", {
+    ...authCookieOptions,
+    expires: new Date(0),
+  });
   res.cookie("jwt", "", {
     ...authCookieOptions,
     expires: new Date(0),

@@ -1,101 +1,114 @@
 import asyncHandler from "express-async-handler";
-import {Admin} from '../models/AdminModel.js'
+import bcrypt from "bcryptjs";
+
+import { Admin } from "../models/AdminModel.js";
 import User from "../models/userModel.js";
-import Product from "../models/ProductModel.js";
-import { createToken } from "../middlewares/JWT.js";
-import bcrypt from "bcryptjs/dist/bcrypt.js";
-import ExtractProductDetailsFromRequest from "../HealpingMaterials/AdminHelper.js";
+import createToken from "../utils/createToken.js";
+import { authCookieOptions } from "../utils/cookieOptions.js";
 
+const buildRole = (role) => {
+  if (typeof role === "object" && role !== null) {
+    const permissions = Array.isArray(role.permissions) && role.permissions.length > 0
+      ? role.permissions.map((permission) => (permission === "*" ? "All" : permission))
+      : ["All"];
 
-
-// admain Account
-
-export const createAdminAccount = asyncHandler(async (req, res) => {
-  const { username, email, password , role} = req.body;
-
-
-  const ExistingAdmin = await Admin.findOne({ email });
-  if (ExistingAdmin) {
-    res.status(400);
-    throw new Error("Admin account already exists");
+    return {
+      name: role.name || "super-admin",
+      permissions,
+    };
   }
 
   switch (role) {
     case "product-editor":
-      role = {
-        name: "product-editor",
-        permissions: ["manage-products"],
-      };
-      break;
+      return { name: "product-editor", permissions: ["manage-products"] };
     case "user-manager":
-      role = {
-        name: "user-manager",
-        permissions: ["manage-users"],
-      };
-      break;
+      return { name: "user-manager", permissions: ["manage-users"] };
     case "delivery-manager":
-      role = {
-        name: "delivery-manager",
-        permissions: ["manage-delivery"],
-      };
-      break;
+      return { name: "delivery-manager", permissions: ["manage-delivery"] };
     case "super-admin":
-      role = {
-        name: "super-admin",
-        permissions: ["*"],
-      };
-      break;
     default:
-      res.status(400);
-      throw new Error("Invalid role specified");
+      return { name: "super-admin", permissions: ["All"] };
+  }
+};
+
+const buildAdminResponse = (admin, token) => ({
+  _id: admin._id,
+  name: admin.name,
+  username: admin.name,
+  email: admin.email,
+  isAdmin: true,
+  isActive: admin.isActive,
+  role: admin.role,
+  token,
+});
+
+export const createAdminAccount = asyncHandler(async (req, res) => {
+  const { name, username, email, password, role } = req.body;
+
+  if (!email || !password) {
+    res.status(400);
+    throw new Error("Email and password are required");
   }
 
-  const adminUser = new Admin({
-    username,
+  const existingAdmin = await Admin.findOne({ email });
+
+  if (existingAdmin) {
+    res.status(400);
+    throw new Error("Admin account already exists");
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const admin = await Admin.create({
+    name: name || username,
     email,
-    password,
-    role,
+    password: hashedPassword,
+    role: buildRole(role),
     isAdmin: true,
   });
 
-}
-);
+  const token = createToken(res, admin._id);
+
+  res.status(201).json(buildAdminResponse(admin, token));
+});
 
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
+  if (!email || !password) {
+    res.status(400);
+    throw new Error("Email and password are required");
+  }
+
   const admin = await Admin.findOne({ email });
-  
 
-  if (admin && (await bcrypt.compare(password, admin.password))) {
-  const token = createToken(res, admin._id); 
+  if (!admin) {
+    res.status(401);
+    throw new Error("Invalid email or password");
+  }
 
-  res.json({
-    _id: admin._id,
-    username: admin.username,
-    email: admin.email,
-    isAdmin: admin.isAdmin,
-    token,
-  });
-} else {
-  res.status(401);
-  throw new Error("Invalid email or password");
-}
+  const passwordMatches = await bcrypt.compare(password, admin.password);
+
+  if (!passwordMatches) {
+    res.status(401);
+    throw new Error("Invalid email or password");
+  }
+
+  const token = createToken(res, admin._id);
+
+  res.status(200).json(buildAdminResponse(admin, token));
 });
-
 
 export const logout = asyncHandler(async (req, res) => {
-  res.json({ message: "Logged out successfully" });
+  res.cookie("Token", "", {
+    ...authCookieOptions,
+    expires: new Date(0),
+  });
+  res.cookie("jwt", "", {
+    ...authCookieOptions,
+    expires: new Date(0),
+  });
+  res.status(200).json({ message: "Logged out successfully" });
 });
-
-  
-
-
-
-
-
-//user account related admin actions
-
 
 export const getAllUsers = asyncHandler(async (req, res) => {
   const users = await User.find({}).select("-password");
@@ -103,57 +116,40 @@ export const getAllUsers = asyncHandler(async (req, res) => {
 });
 
 export const getUserById = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
-  if (user) {
-    res.status(200).json(user);
-  } else {
+  const user = await User.findById(req.params.id).select("-password");
+
+  if (!user) {
     res.status(404);
     throw new Error("User not found");
   }
+
+  res.status(200).json(user);
 });
 
 export const deactivateUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
-  if (user) {
-     const theRequiredUser =  await User.findOne({ _id: user._id });
 
-   theRequiredUser.accountSatus = false;
-
-   await theRequiredUser.save();
-    res.json({ message: "User deactiviated successfully" });
-  } else {
+  if (!user) {
     res.status(404);
     throw new Error("User not found");
   }
+
+  user.accountStatus = false;
+  await user.save();
+
+  res.json({ message: "User deactivated successfully", user });
 });
 
 export const activateUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
-  if (user) {
-     const theRequiredUser =  await User.findOne({ _id: user._id });
 
-   theRequiredUser.accountSatus = true;
-
-   await theRequiredUser.save();
-    res.json({ message: "User activiated successfully" });
-  } else {
+  if (!user) {
     res.status(404);
     throw new Error("User not found");
   }
+
+  user.accountStatus = true;
+  await user.save();
+
+  res.json({ message: "User activated successfully", user });
 });
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-

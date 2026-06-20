@@ -13,7 +13,7 @@ const checkPermission = (permission) => {
     const permissions = admin.role.permissions;
 
     const allowed =
-      permissions.includes(permission) || permissions.includes("*");
+      permissions.includes(permission) || permissions.includes("*") || permissions.includes("All");
 
     if (!allowed) {
       return res.status(403).json({ message: "Not allowed" });
@@ -26,19 +26,38 @@ const checkPermission = (permission) => {
 const IsThereAnyAdmin = async (req, res, next) => {
   const existingAdmin = await Admin.findOne();
   if (!existingAdmin) {
-    const { name, email, password , role } = req.body;
+    const { name, username, email, password, role } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const normalizedRole =
+      typeof role === "string"
+        ? {
+            name: role,
+            permissions:
+              role === "product-editor"
+                ? ["manage-products"]
+                : role === "user-manager"
+                ? ["manage-users"]
+                : role === "delivery-manager"
+                ? ["manage-delivery"]
+                : ["All"],
+          }
+        : role || {
+            name: "super-admin",
+            permissions: ["All"],
+          };
+
     await Admin.create({
-      name: name,
+      name: name || username,
       email: email,
       password: hashedPassword,
-      role: role || "super-admin",
+      role: normalizedRole,
+      isAdmin: true,
     });
 
     res.status(201).json({ message: "Admin account created successfully" });
-
+    return;
   }
   next();
 };

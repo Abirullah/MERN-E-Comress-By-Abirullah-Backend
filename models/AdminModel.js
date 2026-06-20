@@ -54,6 +54,11 @@ const adminSchema = new Schema(
       required: true,
     },
 
+    isAdmin: {
+      type: Boolean,
+      default: true,
+    },
+
     isActive: {
       type: Boolean,
       default: true,
@@ -64,4 +69,3 @@ const adminSchema = new Schema(
 
 
 export const Admin = model("Admin", adminSchema);
-

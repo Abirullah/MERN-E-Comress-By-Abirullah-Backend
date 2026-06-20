@@ -236,6 +236,7 @@ export const buildPublicUserResponse = (user) => {
     username: user.username || fallbackUsername || user.email,
     email: user.email,
     isAdmin: Boolean(user.isAdmin),
+    accountStatus: user.accountStatus !== false,
     Profile: profile,
   };
 };
