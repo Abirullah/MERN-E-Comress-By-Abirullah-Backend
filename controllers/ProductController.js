@@ -163,16 +163,14 @@ const getwishlist = asyncHandler(async (req, res) => {
 });
 
 const UserOrders = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).populate("orders.product");
+  const user = await User.findById(req.user._id).populate("OrderedProducts.product");
 
-  if (user && user.orders) {
-    res.json(user.orders);
-  } else {
-    res.status(404);
-    throw new Error("Orders not found");
+  const orders = Array.isArray(user?.OrderedProducts) ? [...user.OrderedProducts] : [];
+
+  if (orders.length === 0) {
+    return res.json([]);
   }
 
-  const orders = Array.isArray(user.OrderedProducts) ? [...user.OrderedProducts] : [];
   orders.sort((left, right) => {
     const leftDate = new Date(left.orderDate || left.createdAt || 0).getTime();
     const rightDate = new Date(right.orderDate || right.createdAt || 0).getTime();
@@ -184,47 +182,39 @@ const UserOrders = asyncHandler(async (req, res) => {
 });
 
 const getOrderById = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).populate("orders.product");
+  const user = await User.findById(req.user._id).populate("OrderedProducts.product");
+  const orderId = req.params.id;
 
-  if (user && user.orders) {
-    const order = user.orders.find(
-      (o) => o._id.toString() === req.params.id.toString()
-    );
+  const orders = Array.isArray(user?.OrderedProducts) ? user.OrderedProducts : [];
+  const order = orders.find((o) => o._id.toString() === orderId.toString());
 
-    if (order) {
-      res.json(order);
-    } else {
-      res.status(404);
-      throw new Error("Order not found");
-    }
-  } else {
+  if (!order) {
     res.status(404);
     throw new Error("Order not found");
   }
+
+  res.json(order);
 });
 
 const OrderRecieved = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
   const orderId = req.params.id;
 
-  if (user && user.orders) {
-    const order = user.orders.find(
-      (o) => o._id.toString() === orderId.toString()
-    );
+  const orders = Array.isArray(user?.OrderedProducts) ? user.OrderedProducts : [];
+  const order = orders.find((o) => o._id.toString() === orderId.toString());
 
-  if (order) {
-    order.isReceived = true;
-    order.orderStatus = "Delivered";
-    order.paymentStatus = "Paid";
-    await user.save();
-    res.json({ message: "Order marked as received" });
-  } else {
+  if (!order) {
     res.status(404);
     throw new Error("Order not found");
   }
-}
-}
-);
+
+  order.isReceived = true;
+  order.orderStatus = "Delivered";
+  order.paymentStatus = "Paid";
+
+  await user.save();
+  res.json({ message: "Order marked as received" });
+});
 
 
 
