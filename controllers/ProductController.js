@@ -163,9 +163,11 @@ const getwishlist = asyncHandler(async (req, res) => {
 });
 
 const UserOrders = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).populate("OrderedProducts.product");
+  const user = await User.findById(req.user._id).populate("orders.product");
 
-  if (!user) {
+  if (user && user.orders) {
+    res.json(user.orders);
+  } else {
     res.status(404);
     throw new Error("Orders not found");
   }
@@ -182,18 +184,12 @@ const UserOrders = asyncHandler(async (req, res) => {
 });
 
 const getOrderById = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).populate("OrderedProducts.product");
+  const user = await User.findById(req.user._id).populate("orders.product");
 
-  if (!user) {
-    res.status(404);
-    throw new Error("Orders not found");
-  }
-
-  const order = (user.OrderedProducts || []).find(
-    (entry) =>
-      entry._id?.toString() === req.params.id.toString() ||
-      entry.stripeSessionId === req.params.id.toString()
-  );
+  if (user && user.orders) {
+    const order = user.orders.find(
+      (o) => o._id.toString() === req.params.id.toString()
+    );
 
   if (order) {
     res.json(order);
@@ -207,15 +203,9 @@ const OrderRecieved = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
   const orderId = req.params.id;
 
-  if (!user) {
-    res.status(404);
-    throw new Error("Orders not found");
-  }
-
-  const order =
-    user.OrderedProducts?.id(orderId) ||
-    (user.OrderedProducts || []).find(
-      (entry) => entry.stripeSessionId === orderId.toString()
+  if (user && user.orders) {
+    const order = user.orders.find(
+      (o) => o._id.toString() === orderId.toString()
     );
 
   if (order) {
