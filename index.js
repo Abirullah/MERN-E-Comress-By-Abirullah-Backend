@@ -21,7 +21,7 @@ const allowedOrigins = [
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
-  ...(process.env.ADMIN_URL || "http://localhost:5174" || "http://localhost:5173")
+  ...(process.env.ADMIN_URL || "https://mern-e-comress-by-abirullah-front-e.vercel.app" || "http://localhost:5173")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
