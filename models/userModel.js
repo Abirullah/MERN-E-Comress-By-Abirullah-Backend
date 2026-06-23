@@ -99,6 +99,11 @@ const ProductOrderedSchema = new mongoose.Schema(
       required: true,
     },
 
+    totalAmountPKR: {
+      type: Number,
+      default: 0,
+    },
+
     paymentMethod: {
       type: String,
       enum: ["bankTransfer", "cod", "creditCard"],

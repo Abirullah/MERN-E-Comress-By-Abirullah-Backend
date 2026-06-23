@@ -71,6 +71,11 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
 
+    pricePKR: {
+      type: Number,
+      default: 0,
+    },
+
     discountPrice: {
       type: Number,
       default: 0,
@@ -138,6 +143,17 @@ const productSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+productSchema.pre("save", function (next) {
+  const rate = Number(process.env.USD_TO_PKR) || 280;
+
+  if (this.isModified("price")) {
+    const price = Number(this.price || 0);
+    this.pricePKR = Math.round(price * rate * 100) / 100;
+  }
+
+  next();
+});
 
 const Product = mongoose.model("Product", productSchema);
 

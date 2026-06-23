@@ -151,6 +151,9 @@ export const buildOrderPayload = ({
       ? "Submitted"
       : "Pending");
 
+  const rate = Number(process.env.USD_TO_PKR) || 280;
+  const totalAmountPKR = Math.round(normalizedTotal * rate * 100) / 100;
+
   return {
     product: product._id,
     productName: product.name,
@@ -175,6 +178,7 @@ export const buildOrderPayload = ({
     adminMessage: "",
     trackingNumber: "",
     courierName: "",
+    totalAmountPKR,
   };
 };
 
@@ -185,7 +189,10 @@ export const summarizeOrder = (order) => {
 
   return {
     _id: order._id,
-    product: order.product,
+    product:
+      order && order.product && typeof order.product === "object"
+        ? { _id: order.product._id, name: order.product.name || order.productName }
+        : { _id: order.product, name: order.productName },
     productName: order.productName,
     productBrand: order.productBrand,
     brand: order.brand,
@@ -193,6 +200,7 @@ export const summarizeOrder = (order) => {
     image: order.image,
     quantity: order.quantity,
     totalAmount: order.totalAmount,
+    totalAmountPKR: order.totalAmountPKR || null,
     orderDate: order.orderDate,
     isReceived: order.isReceived,
     orderStatus: order.orderStatus,
