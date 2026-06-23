@@ -21,7 +21,7 @@ const allowedOrigins = [
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
-  ...(process.env.ADMIN_URL || "http://localhost:5174")
+  ...(process.env.ADMIN_URL || "http://localhost:5174 || "http://localhost:5173")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
