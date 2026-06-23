@@ -23,6 +23,7 @@ import {
     getAdminOrders,
     updateAdminOrder,
 } from "../controllers/AdminOrderController.js";
+import { sendNotifications } from "../controllers/NotificationController.js";
 
 const AdminRouter = express.Router();
 
@@ -38,6 +39,7 @@ AdminRouter.post('/logout', authenticateAdmin, logout);
 AdminRouter.get("/dashboard" , authenticateAdmin, getAdminDashboard);
 AdminRouter.get("/orders" , authenticateAdmin, authorizeAdmin("manage-delivery") , getAdminOrders);
 AdminRouter.patch("/orders/:userId/:orderId" , authenticateAdmin, authorizeAdmin("manage-delivery") , updateAdminOrder);
+AdminRouter.post("/notifications" , authenticateAdmin, authorizeAdmin("manage-users") , sendNotifications);
 
 AdminRouter.get("/users" , authenticateAdmin, authorizeAdmin("manage-users") , getAllUsers);
 AdminRouter.get("/users/:id" , authenticateAdmin, authorizeAdmin("manage-users") , getUserById);

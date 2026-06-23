@@ -11,6 +11,7 @@ import {
   normalizeProfileUpdatePayload,
   normalizeRegisterPayload,
 } from "../HealpingMaterials/UserAPIsHerper.js";
+import { getUserNotificationSummary } from "./NotificationController.js";
 
 const createUser = asyncHandler(async (req, res) => {
   try {
@@ -90,7 +91,12 @@ const getprofile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
   if (user) {
-    res.json(buildPublicUserResponse(user));
+    const notifications = await getUserNotificationSummary(user._id);
+
+    res.json({
+      ...buildPublicUserResponse(user),
+      notifications,
+    });
   } else {
     res.status(404);
     throw new Error("User not found");

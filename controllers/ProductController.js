@@ -39,6 +39,9 @@ export const updateProduct = asyncHandler(async (req, res) => {
       productData.category !== undefined ? productData.category : product.category;
     product.brand =
       productData.brand !== undefined ? productData.brand : product.brand;
+    product.status =
+      productData.status !== undefined ? productData.status : product.status;
+    product.off = productData.off !== undefined ? productData.off : product.off;
     product.countInStock =
       productData.countInStock !== undefined
         ? productData.countInStock

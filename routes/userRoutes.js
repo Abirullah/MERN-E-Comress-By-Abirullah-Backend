@@ -4,7 +4,7 @@ import {
   loginUser,
   logoutUser,
   getprofile,
-  updateProfile
+  updateProfile,
 } from "../controllers/userController.js";
 
 import {
@@ -17,10 +17,14 @@ import {
   getOrderById,
   OrderRecieved
 } from "../controllers/ProductController.js";
+import {
+  getMyNotifications,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+} from "../controllers/NotificationController.js";
 
 import { authenticate } from "../middlewares/authMiddleware.js";
 import { CreateCheckOut } from "../controllers/CheackOutController.js";
-import User from "../models/userModel.js";
 
 
 const UserRouter = express.Router();
@@ -32,6 +36,9 @@ UserRouter.post("/login", loginUser);
 UserRouter.post("/logout", authenticate, logoutUser);
 UserRouter.get("/profile", authenticate, getprofile);
 UserRouter.put("/profile", authenticate, updateProfile);
+UserRouter.get("/notifications", authenticate, getMyNotifications);
+UserRouter.patch("/notifications/read-all", authenticate, markAllNotificationsAsRead);
+UserRouter.patch("/notifications/:id/read", authenticate, markNotificationAsRead);
 
 
 // user action related to products
